@@ -9,7 +9,6 @@ let scene;
 let camera;
 let renderer;
 let bikeGroup;
-let ground;
 let ecoPoints = 0;
 let clock;
 
@@ -23,12 +22,19 @@ const tips = [
   "Support local ecosystems by keeping waste out of nature trails.",
 ];
 
+const textures = {
+  grass: "https://threejs.org/examples/textures/terrain/grasslight-big.jpg",
+  path: "https://threejs.org/examples/textures/floors/FloorsCheckerboard_S_Diffuse.jpg",
+  metal: "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
+  sky: "https://threejs.org/examples/textures/2294472375_24a3b8ef46_o.jpg",
+};
+
 init();
 animate();
 
 function init() {
   scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0xd8f3dc, 12, 60);
+  scene.fog = new THREE.Fog(0xb7e4c7, 15, 80);
 
   camera = new THREE.PerspectiveCamera(
     70,
@@ -53,21 +59,10 @@ function init() {
   sunlight.shadow.mapSize.set(1024, 1024);
   scene.add(sunlight);
 
-  ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(120, 120),
-    new THREE.MeshStandardMaterial({ color: 0x74c69d })
-  );
-  ground.rotation.x = -Math.PI / 2;
-  ground.receiveShadow = true;
-  scene.add(ground);
-
-  const path = new THREE.Mesh(
-    new THREE.PlaneGeometry(8, 120),
-    new THREE.MeshStandardMaterial({ color: 0x40916c })
-  );
-  path.rotation.x = -Math.PI / 2;
-  path.position.y = 0.01;
-  scene.add(path);
+  buildSkyDome();
+  buildGround();
+  buildPath();
+  buildDecorations();
 
   bikeGroup = new THREE.Group();
   bikeGroup.position.set(0, 0.5, 0);
@@ -112,8 +107,101 @@ function init() {
   });
 }
 
+function loadRepeatingTexture(url, repeatX, repeatY) {
+  const texture = new THREE.TextureLoader().load(url);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(repeatX, repeatY);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function buildSkyDome() {
+  const skyTexture = new THREE.TextureLoader().load(textures.sky);
+  skyTexture.colorSpace = THREE.SRGBColorSpace;
+  const skyGeometry = new THREE.SphereGeometry(120, 48, 48);
+  const skyMaterial = new THREE.MeshBasicMaterial({
+    map: skyTexture,
+    side: THREE.BackSide,
+  });
+  const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+  scene.add(sky);
+}
+
+function buildGround() {
+  const groundTexture = loadRepeatingTexture(textures.grass, 12, 12);
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(120, 120),
+    new THREE.MeshStandardMaterial({
+      map: groundTexture,
+      roughness: 0.9,
+    })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+}
+
+function buildPath() {
+  const pathTexture = loadRepeatingTexture(textures.path, 6, 30);
+  const path = new THREE.Mesh(
+    new THREE.PlaneGeometry(8, 120),
+    new THREE.MeshStandardMaterial({
+      map: pathTexture,
+      roughness: 0.7,
+    })
+  );
+  path.rotation.x = -Math.PI / 2;
+  path.position.y = 0.02;
+  scene.add(path);
+}
+
+function buildDecorations() {
+  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x6f4e37 });
+  const leafMat = new THREE.MeshStandardMaterial({ color: 0x2f9e44 });
+
+  for (let i = 0; i < 18; i += 1) {
+    const trunk = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.15, 0.2, 1.4, 8),
+      trunkMat
+    );
+    const crown = new THREE.Mesh(
+      new THREE.ConeGeometry(0.7, 1.6, 10),
+      leafMat
+    );
+    trunk.position.set(
+      THREE.MathUtils.randFloatSpread(18),
+      0.7,
+      THREE.MathUtils.randFloat(-45, 45)
+    );
+    crown.position.set(trunk.position.x, 1.8, trunk.position.z);
+    trunk.castShadow = true;
+    crown.castShadow = true;
+    scene.add(trunk, crown);
+  }
+
+  const bannerTexture = new THREE.TextureLoader().load(textures.metal);
+  bannerTexture.colorSpace = THREE.SRGBColorSpace;
+  const banner = new THREE.Mesh(
+    new THREE.PlaneGeometry(6, 2),
+    new THREE.MeshStandardMaterial({
+      map: bannerTexture,
+      transparent: true,
+    })
+  );
+  banner.position.set(-4, 2.2, -12);
+  banner.rotation.y = Math.PI / 6;
+  scene.add(banner);
+}
+
 function createPickups() {
-  const material = new THREE.MeshStandardMaterial({ color: 0x2d6a4f });
+  const pickupTexture = loadRepeatingTexture(textures.metal, 1, 1);
+  const material = new THREE.MeshStandardMaterial({
+    map: pickupTexture,
+    metalness: 0.3,
+    roughness: 0.4,
+  });
+
   for (let i = 0; i < 12; i += 1) {
     const pickup = new THREE.Mesh(
       new THREE.CylinderGeometry(0.35, 0.35, 0.4, 16),
