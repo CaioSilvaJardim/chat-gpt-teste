@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recycle Bicycle</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.152.2/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.152.2/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="game-container"></div>
+    <div class="hud">
+      <div class="hud__title">Recycle Bicycle</div>
+      <div class="hud__controls">WASD / Arrow Keys to ride • Space to brake</div>
+      <div class="hud__score">Eco Points: <span id="score">0</span></div>
+      <div class="hud__speed">Speed: <span id="speed">0</span> km/h</div>
+      <div class="hud__dialogue" id="dialogue"></div>
+    </div>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
